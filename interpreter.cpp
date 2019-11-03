@@ -6,23 +6,28 @@ enum Term {
     END,
     PM,
     MD,
-    DIGIT,
-    LBRACE,
-    RBRACE
+    DIG,
+    LB,
+    RB
 };
 
 struct Token {
     
-    Term term;
-    std::string attr;
+    const Term term;
+    const std::string attr;
 
+    Token(const Term lterm, const std::string lattr) : term(lterm), attr(lattr) { }
+    
+    operator bool() {
+        return term != Term::END;
+    }
 };
 
 struct Lexer {
     
     Lexer () {}
     
-    bool next() {
+    Token next() {
         std::string token_str = "";
        
         
@@ -30,39 +35,39 @@ struct Lexer {
         do {
             if (!(std::cin >> first)) {
                 std::cout << "End of line :(\n";
-                return false;
+                return Token(Term::END, "");
             }
         }
-        while (first == ' ');
+        while (first == ' ' || first == '\n' || first == '\r' || first == '\t');
         
         if (first == '+') {
             std::cout << "Plus found\n";
-            return true;
+            return Token(Term::PM, "+");
         }
         
         if (first == '-') {
             std::cout << "Minus found\n";
-            return true;
+            return Token(Term::PM, "-");
         }
 
         if (first == '*') {
             std::cout << "Mul found\n";
-            return true;
+            return Token(Term::MD, "*");
         }
 
         if (first == '/') {
             std::cout << "Div found\n";
-            return true;
+            return Token(Term::MD, "/");
         }
 
         if (first == '(') {
             std::cout << "LB found\n";
-            return true;
+            return Token(Term::LB, "");
         }
 
         if (first == ')') {
             std::cout << "RB found\n";
-            return true;
+            return Token(Term::RB, "");
         }
 
         if (first >= '0' && first <= '9') {
@@ -74,7 +79,8 @@ struct Lexer {
                 next = std::cin.peek();
             }
 
-            std::cout << token_str << " found\n";
+            std::cout << token_str << " digit found\n";
+            return Token(Term::DIG, token_str);
         }
         
     }
