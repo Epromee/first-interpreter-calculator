@@ -135,8 +135,17 @@ struct Parser {
         //next is mul / div?
         //yes - repeat
         //no - exiti
+        
+
+        if (lexer.peek().term == Term::PM) {
+            //todo: unary operation
+            lexer.next();
+            std::cout << "Unary caught\n";
+        }
         md_again:
+
         std::cout << "Mul-div looping\n";
+        
         if (lexer.peek().term == Term::DIG) {
             //accept digit
             lexer.next();
