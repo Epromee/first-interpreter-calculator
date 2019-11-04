@@ -43,39 +43,39 @@ struct Lexer {
         char first;
         do {
             if (!(std::cin >> first)) {
-                std::cout << "End of line :(\n";
+                std::cout << "\tEnd of line :(\n";
                 return Token(Term::END, "");
             }
         }
         while (first == ' ' || first == '\n' || first == '\r' || first == '\t');
         
         if (first == '+') {
-            std::cout << "Plus found\n";
+            std::cout << "\tPlus found\n";
             return Token(Term::PM, "+");
         }
         
         if (first == '-') {
-            std::cout << "Minus found\n";
+            std::cout << "\tMinus found\n";
             return Token(Term::PM, "-");
         }
 
         if (first == '*') {
-            std::cout << "Mul found\n";
+            std::cout << "\tMul found\n";
             return Token(Term::MD, "*");
         }
 
         if (first == '/') {
-            std::cout << "Div found\n";
+            std::cout << "\tDiv found\n";
             return Token(Term::MD, "/");
         }
 
         if (first == '(') {
-            std::cout << "LB found\n";
+            std::cout << "\tLB found\n";
             return Token(Term::LB, "");
         }
 
         if (first == ')') {
-            std::cout << "RB found\n";
+            std::cout << "\tRB found\n";
             return Token(Term::RB, "");
         }
 
@@ -88,7 +88,7 @@ struct Lexer {
                 next = std::cin.peek();
             }
 
-            std::cout << token_str << " digit found\n";
+            std::cout << "\t" << token_str << " digit found\n";
             return Token(Term::DIG, token_str);
         }
         
@@ -110,7 +110,72 @@ struct Parser {
 
     void parse(Lexer& lexer) {
         //while (lexer.next()) {};
-        
+        pmSeries(lexer);
+    }
+
+    void pmSeries(Lexer& lexer) {
+        //mdSeries
+        //next is plus or minus?
+        //yes - repeat
+        //no - exit
+        pm_again:
+        std::cout << "Plus-minus looping\n";
+        mdSeries(lexer);
+        if (lexer.peek().term == Term::PM) {
+            lexer.next();
+            goto pm_again;
+        }
+        std::cout << "Plus-minus exit\n";
+    }
+
+    void mdSeries(Lexer& lexer) {
+        //is digit? use digit
+        //is lb? use braces
+        //else syntax error
+        //next is mul / div?
+        //yes - repeat
+        //no - exiti
+        md_again:
+        std::cout << "Mul-div looping\n";
+        if (lexer.peek().term == Term::DIG) {
+            //accept digit
+            lexer.next();
+        }
+        else if (lexer.peek().term == Term::LB) {
+            //accept subexpr
+            braces(lexer);
+        }
+        else {
+            //todo: syntax error
+        }
+
+        if (lexer.peek().term == Term::MD) {
+            lexer.next();
+            goto md_again;
+        }
+        std::cout << "Mul-div exit\n";
+    }
+
+    void braces(Lexer& lexer) {
+        //assert lb
+        std::cout << "Braces assertion\n";
+        if (lexer.peek().term == Term::LB) {
+            lexer.next();
+        }
+        else {
+            //todo: syntax error
+        }
+        //pmSeries
+        pmSeries(lexer);
+
+        //assert rb
+        if (lexer.peek().term == Term::RB) {
+            lexer.next();
+        }
+        else {
+            //todo: syntax error
+        }
+        std::cout << "Braces exit\n";
     }
 
 };
