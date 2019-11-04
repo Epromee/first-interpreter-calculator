@@ -122,7 +122,11 @@ struct Parser {
         std::cout << "Plus-minus looping\n";
         mdSeries(lexer);
         if (lexer.peek().term == Term::PM) {
+            unary_again_pm:
             lexer.next();
+            if (lexer.peek().term == Term::PM) {
+                goto unary_again_pm;
+            }
             goto pm_again;
         }
         std::cout << "Plus-minus exit\n";
@@ -139,9 +143,14 @@ struct Parser {
 
         if (lexer.peek().term == Term::PM) {
             //todo: unary operation
+            unary_again:
             lexer.next();
             std::cout << "Unary caught\n";
+            if (lexer.peek().term == Term::PM) {
+                goto unary_again;
+            }
         }
+
         md_again:
 
         std::cout << "Mul-div looping\n";
