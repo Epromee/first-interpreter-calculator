@@ -13,8 +13,8 @@ enum Term {
 
 struct Token {
     
-    const Term term;
-    const std::string attr;
+    Term term;
+    std::string attr;
 
     Token(const Term lterm, const std::string lattr) : term(lterm), attr(lattr) { }
     
@@ -25,9 +25,18 @@ struct Token {
 
 struct Lexer {
     
-    Lexer () {}
+    Token cashed;
+    bool has_cashed;
+
+    Lexer () : cashed(Term::END, ""), has_cashed(false) {}
     
     Token next() {
+
+        if (has_cashed) {
+            has_cashed = false;
+            return cashed;
+        }
+
         std::string token_str = "";
        
         
@@ -84,12 +93,32 @@ struct Lexer {
         }
         
     }
+
+    Token peek() {
+        if (!has_cashed) {
+            cashed = next();
+            has_cashed = true;
+        }
+        return cashed;
+    }
+          
+};
+
+struct Parser {
     
+    Parser() {};
+
+    void parse(Lexer& lexer) {
+        //while (lexer.next()) {};
+        
+    }
+
 };
 
 
 int main() {
     Lexer myLexer{};
-    while (myLexer.next()) {};
+    Parser myParser;
+    myParser.parse(myLexer);
     return 0;
 }
