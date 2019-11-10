@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdexcept>
 
 enum Term {
     END,
@@ -46,12 +47,13 @@ struct Lexer {
                 //std::cout << "\tEnd of line :(\n";
                 return Token(Term::END, "");
             }
-            if (first == '\n') {
-                return Token(Term::END, "");
-            }
         }
-        while (first == ' ' || first == '\n' || first == '\r' || first == '\t');
+        while (first == ' ' || first == '\r' || first == '\t');
         
+        if (first == '\n') {
+            return Token(Term::END, "");
+        }
+
         if (first == '+') {
             //std::cout << "\tPlus found\n";
             return Token(Term::PM, "+");
@@ -94,6 +96,8 @@ struct Lexer {
             //std::cout << "\t" << token_str << " digit found\n";
             return Token(Term::DIG, token_str);
         }
+
+        throw std::runtime_error("[Lexer] Unknown character, can't recognize");
         
     }
 
@@ -113,8 +117,16 @@ struct Parser {
 
     void parse(Lexer& lexer) {
         //while (lexer.next()) {};
-        auto result = pmSeries(lexer);
-        std::cout << "I computed this: " << result << '\n';
+        
+        float result;
+        
+        try {
+            result = pmSeries(lexer);
+            std::cout << "\033[92;1mYour result: " << result << "\033[0m\n";
+        }
+        catch (std::runtime_error e) {
+            std::cout << "\033[91;1m" << e.what() << "\033[0m\n";
+        }
     }
 
     float pmSeries(Lexer& lexer) {
@@ -181,19 +193,34 @@ struct Parser {
                 sign = 1;
             }
             else {
-                mul_div = sign * mul_div / std::stof(lexer.next().attr);
-                sign = 1;
+                auto del = std::stof(lexer.next().attr);
+                if (del != 0) {
+                    mul_div = sign * mul_div / del;
+                    sign = 1;
+                }
+                else
+                    throw std::runtime_error("[Parser] Attempted to divide by zero");
             }
         }
         else if (lexer.peek().term == Term::LB) {
             //accept subexpr
-            if (action.attr == "*")
-                mul_div = mul_div * braces(lexer);
-            else
-                mul_div = mul_div / braces(lexer);
+            if (action.attr == "*") {
+                mul_div = sign * mul_div * braces(lexer);
+                sign = 1;
+            }
+            else {
+                auto del = braces(lexer);
+                if (del != 0) {
+                    mul_div = sign * mul_div / del;
+                    sign = 1;
+                }
+                else
+                    throw std::runtime_error("[Parser] Attempted to divide by zero");
+            }
         }
         else {
             //todo: syntax error
+            throw std::runtime_error("[Parser] Digit or braced expression was expected");
         }
 
         if (lexer.peek().term == Term::MD) {
@@ -213,6 +240,7 @@ struct Parser {
         }
         else {
             //todo: syntax error
+            throw std::runtime_error("[Parser] Left brace was expected");
         }
         //pmSeries
         float in_braces = pmSeries(lexer);
@@ -223,6 +251,7 @@ struct Parser {
         }
         else {
             //todo: syntax error
+            throw std::runtime_error("[Parser] Right brace was expected");
         }
         //std::cout << "Braces exit\n";
 
