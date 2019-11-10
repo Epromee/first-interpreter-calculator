@@ -43,39 +43,42 @@ struct Lexer {
         char first;
         do {
             if (!(std::cin >> first)) {
-                std::cout << "\tEnd of line :(\n";
+                //std::cout << "\tEnd of line :(\n";
+                return Token(Term::END, "");
+            }
+            if (first == '\n') {
                 return Token(Term::END, "");
             }
         }
         while (first == ' ' || first == '\n' || first == '\r' || first == '\t');
         
         if (first == '+') {
-            std::cout << "\tPlus found\n";
+            //std::cout << "\tPlus found\n";
             return Token(Term::PM, "+");
         }
         
         if (first == '-') {
-            std::cout << "\tMinus found\n";
+            //std::cout << "\tMinus found\n";
             return Token(Term::PM, "-");
         }
 
         if (first == '*') {
-            std::cout << "\tMul found\n";
+            //std::cout << "\tMul found\n";
             return Token(Term::MD, "*");
         }
 
         if (first == '/') {
-            std::cout << "\tDiv found\n";
+            //std::cout << "\tDiv found\n";
             return Token(Term::MD, "/");
         }
 
         if (first == '(') {
-            std::cout << "\tLB found\n";
+            //std::cout << "\tLB found\n";
             return Token(Term::LB, "");
         }
 
         if (first == ')') {
-            std::cout << "\tRB found\n";
+            //std::cout << "\tRB found\n";
             return Token(Term::RB, "");
         }
 
@@ -88,7 +91,7 @@ struct Lexer {
                 next = std::cin.peek();
             }
 
-            std::cout << "\t" << token_str << " digit found\n";
+            //std::cout << "\t" << token_str << " digit found\n";
             return Token(Term::DIG, token_str);
         }
         
@@ -110,29 +113,37 @@ struct Parser {
 
     void parse(Lexer& lexer) {
         //while (lexer.next()) {};
-        pmSeries(lexer);
+        auto result = pmSeries(lexer);
+        std::cout << "I computed this: " << result << '\n';
     }
 
-    void pmSeries(Lexer& lexer) {
+    float pmSeries(Lexer& lexer) {
         //mdSeries
         //next is plus or minus?
         //yes - repeat
         //no - exit
+        float plus_minus = 0;
+        
+        Token action = Token(Term::PM, "+");
+
         pm_again:
-        std::cout << "Plus-minus looping\n";
-        mdSeries(lexer);
+        //std::cout << "Plus-minus looping\n";
+
+        if (action.attr == "+")
+            plus_minus += mdSeries(lexer);
+        if (action.attr == "-")
+            plus_minus -= mdSeries(lexer);
+
         if (lexer.peek().term == Term::PM) {
-            unary_again_pm:
-            lexer.next();
-            if (lexer.peek().term == Term::PM) {
-                goto unary_again_pm;
-            }
+            action = lexer.next();
             goto pm_again;
         }
-        std::cout << "Plus-minus exit\n";
+        //std::cout << "Plus-minus exit\n";
+
+        return plus_minus;
     }
 
-    void mdSeries(Lexer& lexer) {
+    float mdSeries(Lexer& lexer) {
         //is digit? use digit
         //is lb? use braces
         //else syntax error
@@ -140,43 +151,63 @@ struct Parser {
         //yes - repeat
         //no - exiti
         
+        float sign = 1;
+        
+         
+        unary_again:
 
         if (lexer.peek().term == Term::PM) {
             //todo: unary operation
-            unary_again:
-            lexer.next();
-            std::cout << "Unary caught\n";
-            if (lexer.peek().term == Term::PM) {
-                goto unary_again;
+            auto current_unary = lexer.next();
+            if (current_unary.attr == "-") {
+                sign = -sign;
             }
+            goto unary_again;
         }
+         
+        
+        float mul_div = 1;
+        
+        Token action = Token(Term::MD, "*");
 
         md_again:
 
-        std::cout << "Mul-div looping\n";
+        //std::cout << "Mul-div looping\n";
         
         if (lexer.peek().term == Term::DIG) {
             //accept digit
-            lexer.next();
+            if (action.attr == "*") {
+                mul_div = sign * mul_div * std::stof(lexer.next().attr);
+                sign = 1;
+            }
+            else {
+                mul_div = sign * mul_div / std::stof(lexer.next().attr);
+                sign = 1;
+            }
         }
         else if (lexer.peek().term == Term::LB) {
             //accept subexpr
-            braces(lexer);
+            if (action.attr == "*")
+                mul_div = mul_div * braces(lexer);
+            else
+                mul_div = mul_div / braces(lexer);
         }
         else {
             //todo: syntax error
         }
 
         if (lexer.peek().term == Term::MD) {
-            lexer.next();
+            action = lexer.next();
             goto md_again;
         }
-        std::cout << "Mul-div exit\n";
+        //std::cout << "Mul-div exit\n";
+
+        return mul_div;
     }
 
-    void braces(Lexer& lexer) {
+    float braces(Lexer& lexer) {
         //assert lb
-        std::cout << "Braces assertion\n";
+        //std::cout << "Braces assertion\n";
         if (lexer.peek().term == Term::LB) {
             lexer.next();
         }
@@ -184,7 +215,7 @@ struct Parser {
             //todo: syntax error
         }
         //pmSeries
-        pmSeries(lexer);
+        float in_braces = pmSeries(lexer);
 
         //assert rb
         if (lexer.peek().term == Term::RB) {
@@ -193,7 +224,9 @@ struct Parser {
         else {
             //todo: syntax error
         }
-        std::cout << "Braces exit\n";
+        //std::cout << "Braces exit\n";
+
+        return in_braces;
     }
 
 };
