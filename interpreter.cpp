@@ -29,7 +29,9 @@ struct Lexer {
     Token cashed;
     bool has_cashed;
 
-    Lexer () : cashed(Term::END, ""), has_cashed(false) {}
+    Lexer () : cashed(Term::END, ""), has_cashed(false), buffer{} {
+        
+    }
     
     Token next() {
 
@@ -43,16 +45,12 @@ struct Lexer {
         
         char first;
         do {
-            if (!(std::cin >> first)) {
-                //std::cout << "\tEnd of line :(\n";
+            first = std::cin.get();
+            if (std::cin.eof() || first == '\n') {
                 return Token(Term::END, "");
             }
         }
-        while (first == ' ' || first == '\r' || first == '\t');
-        
-        if (first == '\n') {
-            return Token(Term::END, "");
-        }
+        while (first == ' ' || first == '\r'|| first == '\t');
 
         if (first == '+') {
             //std::cout << "\tPlus found\n";
@@ -126,6 +124,10 @@ struct Parser {
         }
         catch (std::runtime_error e) {
             std::cout << "\033[91;1m" << e.what() << "\033[0m\n";
+        }
+
+        if (lexer.next().term != Term::END) {
+            std::cout << "\033[91;1m" << "Odd characters after evaluation\n" << "\033[0m\n";
         }
     }
 
