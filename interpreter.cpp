@@ -29,7 +29,7 @@ struct Lexer {
     Token cashed;
     bool has_cashed;
 
-    Lexer () : cashed(Term::END, ""), has_cashed(false), buffer{} {
+    Lexer () : cashed(Term::END, ""), has_cashed(false) {
         
     }
     
