@@ -2,6 +2,32 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <ios>
+
+/*
+    Author: Egor Promyshlennikov
+    E-mail: eprom1234@gmail.com
+    Date: 24 Nov 2019
+
+    ------------------------------------------------------------------------
+
+    This is my first attempt to create a simple working interpreter.
+    The program calculates arithmetical expression with floating point.
+    For example:
+    (2 + 3 * 5) / (6.3 - 7.155)
+
+    This is just a prototype for me to make the shit work.
+    I'm not going to neither fix bugs nor add new features there.
+    
+    If you think this code is an inefficient shit - that is, for sure.
+
+    The next my target is a new better interpreter.
+    Step by step, I will have designed my own full-fledged compiler.
+    
+    ------------------------------------------------------------------------
+
+    Oh, license? This is a pirate code, arrr. I write it, you pirate it :)
+*/
 
 enum Term {
     END,
@@ -83,7 +109,35 @@ struct Lexer {
                 next = std::cin.peek();
             }
 
+            /* Can capture floating point number dot, but only once */
+            if ((char) next == '.') {
+                token_str = token_str + (char)next;
+                std::cin.get();
+                next = std::cin.peek();
+
+                /* One digit must definitely exist after floating point */
+                if (next >= '0' && next <= '9') {
+                   token_str = token_str + (char) next;
+                   std::cin.get();
+                }
+                else {
+                    throw std::runtime_error("[Lexer] Digit was expected after floating point");
+                }
+
+                /* Several more digits */
+                next = std::cin.peek();
+                while (next >= '0' && next <= '9') {
+                    next = std::cin.get();
+                    token_str = token_str + (char)next;
+                    next = std::cin.peek();
+                }
+            }
+
             return Token(Term::DIG, token_str);
+        }
+
+        if (first == '.') {
+            throw std::runtime_error("[Lexer] Dot really? Not this time dude!");
         }
 
         throw std::runtime_error("[Lexer] Unknown character, can't recognize");
@@ -110,15 +164,16 @@ struct Parser {
         
         try {
             result = pmSeries(lexer);
-            std::cout << "\033[92;1mYour result: " << result << "\033[0m\n";
+            std::cout << "\033[92;1mYour result: " << std::defaultfloat << result << "\033[0m\n";
+            if (lexer.next().term != Term::END) {
+                std::cout << "\033[91;1m" << "Odd characters after evaluation\n" << "\033[0m\n";
+            }
         }
         catch (std::runtime_error e) {
             std::cout << "\033[91;1m" << e.what() << "\033[0m\n";
         }
 
-        if (lexer.next().term != Term::END) {
-            std::cout << "\033[91;1m" << "Odd characters after evaluation\n" << "\033[0m\n";
-        }
+        
     }
 
     float pmSeries(Lexer& lexer) {
