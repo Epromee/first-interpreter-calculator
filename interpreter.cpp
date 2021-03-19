@@ -52,6 +52,7 @@ struct Token {
 
 struct Lexer {
     
+    /* Bruh, I mean "cached", but too late to refactor */
     Token cashed;
     bool has_cashed;
 
