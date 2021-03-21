@@ -1,5 +1,5 @@
 # first_interpreter_calculator
-My first attempt to parse the shit and do some cheety hacky computations with it.
+My first attempt to parse the shit and do some cheaty hacky computations with it.
 
 So, I want to write a compiler.
 
